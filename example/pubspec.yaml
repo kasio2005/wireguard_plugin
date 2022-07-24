@@ -1,6 +1,6 @@
 name: wireguard_plugin_example
 description: Demonstrates how to use the wireguard_plugin plugin.
-
+version: 1.0.0+1
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -70,7 +70,7 @@ flutter:
   fonts:
     - family: Montserrat
       fonts:
-        - asset: assets\fonts\Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
