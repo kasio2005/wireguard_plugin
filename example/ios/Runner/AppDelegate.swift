@@ -28,7 +28,7 @@ fileprivate let l = L("App")
                                               binaryMessenger: controller.binaryMessenger)
     batteryChannel.setMethodCallHandler({
       (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
-      guard call.method == "getBatteryLevel" else {
+      guard call.method == "start" else {
     result(FlutterMethodNotImplemented)
     return
   }

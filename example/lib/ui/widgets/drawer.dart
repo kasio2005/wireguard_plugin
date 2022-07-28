@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wireguard_plugin_example/ui/wireguard_plugin.dart';
 import 'dart:io';
 
 import '../common/texts.dart';
@@ -186,7 +187,8 @@ class _drawerState extends State<drawer> {
             ),
             onTap: () {
               //  Navigator.pop(context);
-              Get.to(Logs());
+              // Get.to(Logs());
+              WireguardPlugin.startTunel();
             },
           ),
           SizedBox(
