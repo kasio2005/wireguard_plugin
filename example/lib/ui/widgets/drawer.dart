@@ -6,8 +6,6 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:wireguard_plugin_example/ui/wireguard_plugin.dart';
 import 'dart:io';
 
 import '../common/texts.dart';
@@ -187,8 +185,7 @@ class _drawerState extends State<drawer> {
             ),
             onTap: () {
               //  Navigator.pop(context);
-              // Get.to(Logs());
-              WireguardPlugin.startTunel();
+              Get.to(Logs());
             },
           ),
           SizedBox(
@@ -256,8 +253,6 @@ class _drawerState extends State<drawer> {
     List<File> files = [];
 
     for (int i = 1; i <= vpn; i++) {
-      var status = await Permission.storage.status;
-      if (!status.isDenied) await Permission.storage.request();
       log(vpn.toString());
       log("runinngggg");
       String tunnel =

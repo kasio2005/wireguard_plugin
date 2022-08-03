@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 
@@ -12,9 +11,6 @@ import 'model/tunnel_stats.dart';
 class WireguardPlugin {
   static const MethodChannel _channel =
       const MethodChannel('tark.pro/wireguard-flutter');
-
-  static const MethodChannel _methodChannel =
-      const MethodChannel('wireguard-flutter');
 
   /// no need to close, since it's static controller
   // ignore: close_sinks
@@ -28,13 +24,6 @@ class WireguardPlugin {
     print('WireguardPlugin requestPermission ');
     final result = await _channel.invokeMethod('requestPermission');
     print('WireguardPlugin requestPermission $result');
-    return result;
-  }
-
-  static Future<bool> startTunel() async {
-    print('starting tunnel ');
-    final result = await _methodChannel.invokeMethod('start');
-    print('tunnel started  $result');
     return result;
   }
 
