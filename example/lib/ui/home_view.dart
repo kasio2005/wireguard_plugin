@@ -5,14 +5,13 @@ import 'package:check_vpn_connection/check_vpn_connection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:get/get.dart';
-import 'package:get/get_connect/sockets/src/socket_notifier.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin_example/ui/tunnel_details.dart';
 import 'package:wireguard_plugin_example/ui/widgets/drawer.dart';
 import 'package:wireguard_plugin_example/ui/wireguard_plugin.dart';
+import 'dart:io' show Platform;
 
 import 'create_tunel.dart';
 import 'model/tunnel.dart';
@@ -176,26 +175,29 @@ class _HomeViewState extends State<HomeView> {
                                           delete(index);
                                         },
                                         onTap: () async {
-                                          await WireguardPlugin
-                                              .requestPermission();
-                                          await WireguardPlugin.initialize();
-                                          Get.to(TunnelDetails(
-                                            fromHome: true,
-                                            selected: _selectedTunelName,
-                                            initName: name.elementAt(index),
-                                            initAddress:
-                                                address.elementAt(index),
-                                            initPort: '51820',
-                                            initDnsServer: dns.elementAt(index),
-                                            initPrivateKey:
-                                                privatekey.elementAt(index),
-                                            initAllowedIp:
-                                                allowed.elementAt(index),
-                                            initPublicKey:
-                                                publickey.elementAt(index),
-                                            initEndpoint:
-                                                endpoint.elementAt(index),
-                                          ));
+                                          if (Platform.isAndroid) {
+                                            await WireguardPlugin
+                                                .requestPermission();
+                                            await WireguardPlugin.initialize();
+                                            Get.to(TunnelDetails(
+                                              fromHome: true,
+                                              selected: _selectedTunelName,
+                                              initName: name.elementAt(index),
+                                              initAddress:
+                                                  address.elementAt(index),
+                                              initPort: '51820',
+                                              initDnsServer:
+                                                  dns.elementAt(index),
+                                              initPrivateKey:
+                                                  privatekey.elementAt(index),
+                                              initAllowedIp:
+                                                  allowed.elementAt(index),
+                                              initPublicKey:
+                                                  publickey.elementAt(index),
+                                              initEndpoint:
+                                                  endpoint.elementAt(index),
+                                            ));
+                                          }
                                         },
                                         child: Ink(
                                           color:
@@ -259,37 +261,39 @@ class _HomeViewState extends State<HomeView> {
                                                           });
                                                         }
                                                         loadingView();
-
-                                                        await WireguardPlugin
-                                                            .setState(
-                                                                isConnected:
-                                                                    _connected,
-                                                                tunnel: Tunnel(
-                                                                  name: name
-                                                                      .elementAt(
-                                                                          index),
-                                                                  address: address
-                                                                      .elementAt(
-                                                                          index),
-                                                                  dnsServer: dns
-                                                                      .elementAt(
-                                                                          index),
-                                                                  listenPort:
-                                                                      '51820',
-                                                                  peerAllowedIp:
-                                                                      allowed.elementAt(
-                                                                          index),
-                                                                  peerEndpoint:
-                                                                      endpoint.elementAt(
-                                                                          index),
-                                                                  peerPublicKey:
-                                                                      publickey
-                                                                          .elementAt(
-                                                                              index),
-                                                                  privateKey: privatekey
-                                                                      .elementAt(
-                                                                          index),
-                                                                ));
+                                                        if (Platform
+                                                            .isAndroid) {
+                                                          await WireguardPlugin
+                                                              .setState(
+                                                                  isConnected:
+                                                                      _connected,
+                                                                  tunnel:
+                                                                      Tunnel(
+                                                                    name: name
+                                                                        .elementAt(
+                                                                            index),
+                                                                    address: address
+                                                                        .elementAt(
+                                                                            index),
+                                                                    dnsServer: dns
+                                                                        .elementAt(
+                                                                            index),
+                                                                    listenPort:
+                                                                        '51820',
+                                                                    peerAllowedIp:
+                                                                        allowed.elementAt(
+                                                                            index),
+                                                                    peerEndpoint:
+                                                                        endpoint
+                                                                            .elementAt(index),
+                                                                    peerPublicKey:
+                                                                        publickey
+                                                                            .elementAt(index),
+                                                                    privateKey:
+                                                                        privatekey
+                                                                            .elementAt(index),
+                                                                  ));
+                                                        }
                                                         Navigator.pop(context);
                                                         // Phoenix.rebirth(context);
                                                         log("after");
@@ -612,7 +616,7 @@ class _HomeViewState extends State<HomeView> {
 
       extractContent(contents);
     } catch (e) {
-      _showError(context, "Failed to export tunnel");
+      _showError(context, "Failed to import tunnel");
     }
   }
 
@@ -705,9 +709,9 @@ class _HomeViewState extends State<HomeView> {
       String initPublicKey,
       String initEndpoint) async {
     log("requesting permission");
-    await WireguardPlugin.requestPermission();
+    if (Platform.isAndroid) await WireguardPlugin.requestPermission();
     log("initializing");
-    await WireguardPlugin.initialize();
+    if (Platform.isAndroid) await WireguardPlugin.initialize();
     log("going to tunnel details");
     Get.to(TunnelDetails(
       fromHome: false,

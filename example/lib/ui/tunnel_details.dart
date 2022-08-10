@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:check_vpn_connection/check_vpn_connection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_vpn/flutter_vpn.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,6 +18,8 @@ import 'home_view.dart';
 import 'model/tunnel.dart';
 import 'model/tunnel_stats.dart';
 import 'ui_constants.dart';
+
+import 'dart:io' show Platform;
 
 class TunnelDetails extends StatefulWidget {
   String? initName;
@@ -96,20 +99,22 @@ class _TunnelDetailsState extends State<TunnelDetails> {
     // await WireguardPlugin.requestPermission();
     // await WireguardPlugin.initialize();
     if (widget.selected == _name && _connected) {
-      await WireguardPlugin.setState(
-          isConnected: _connected,
-          tunnel: Tunnel(
-            name: _name!,
-            address: _address!,
-            dnsServer: _dnsServer!,
-            listenPort: _listenPort!,
-            peerAllowedIp: _peerAllowedIp!,
-            peerEndpoint: _peerEndpoint!,
-            peerPublicKey: _peerPublicKey!,
-            privateKey: _privateKey!,
-          ));
+      if (Platform.isAndroid) {
+        await WireguardPlugin.setState(
+            isConnected: _connected,
+            tunnel: Tunnel(
+              name: _name!,
+              address: _address!,
+              dnsServer: _dnsServer!,
+              listenPort: _listenPort!,
+              peerAllowedIp: _peerAllowedIp!,
+              peerEndpoint: _peerEndpoint!,
+              peerPublicKey: _peerPublicKey!,
+              privateKey: _privateKey!,
+            ));
 
-      _startGettingStats(context);
+        _startGettingStats(context);
+      }
     }
     setState(() {
       _ready = true;
@@ -118,8 +123,8 @@ class _TunnelDetailsState extends State<TunnelDetails> {
 
   _status() async {
     print("in status");
-    WireguardPlugin.requestPermission();
-    WireguardPlugin.initialize();
+    if (Platform.isAndroid) WireguardPlugin.requestPermission();
+    if (Platform.isAndroid) WireguardPlugin.initialize();
 
     // _stopGettingStats();
     if (await CheckVpnConnection.isVpnActive()) {
@@ -365,23 +370,36 @@ class _TunnelDetailsState extends State<TunnelDetails> {
     if (widget.fromHome ? true : !isExist) {
       try {
         loadingView();
-        await WireguardPlugin.setState(
-            isConnected: !_connected,
-            tunnel: Tunnel(
-              name: _name!,
-              address: _address!,
-              dnsServer: _dnsServer!,
-              listenPort: _listenPort!,
-              peerAllowedIp: _peerAllowedIp!,
-              peerEndpoint: _peerEndpoint!,
-              peerPublicKey: _peerPublicKey!,
-              privateKey: _privateKey!,
-            ));
-        setState(() {
-          _connected = !_connected;
-        });
-        _startGettingStats(context);
-        Navigator.pop(context);
+        if (Platform.isAndroid) {
+          await WireguardPlugin.setState(
+              isConnected: !_connected,
+              tunnel: Tunnel(
+                name: _name!,
+                address: _address!,
+                dnsServer: _dnsServer!,
+                listenPort: _listenPort!,
+                peerAllowedIp: _peerAllowedIp!,
+                peerEndpoint: _peerEndpoint!,
+                peerPublicKey: _peerPublicKey!,
+                privateKey: _privateKey!,
+              ));
+          setState(() {
+            _connected = !_connected;
+          });
+          _startGettingStats(context);
+          Navigator.pop(context);
+        } else {
+          if (_connected) {
+            FlutterVpn.disconnect();
+          } else {
+            Navigator.pop(context);
+            FlutterVpn.connectIkev2EAP(
+              server: "vpn.nessom.ir",
+              username: "behzad",
+              password: "1234@qwerB",
+            );
+          }
+        }
         //Get.to(HomeView());
         /*if (result == true) {
         setState(() => _connected = !_connected);
@@ -394,23 +412,28 @@ class _TunnelDetailsState extends State<TunnelDetails> {
     } else {
       if (_connected) {
         loadingView();
-        await WireguardPlugin.setState(
-            isConnected: !_connected,
-            tunnel: Tunnel(
-              name: _name!,
-              address: _address!,
-              dnsServer: _dnsServer!,
-              listenPort: _listenPort!,
-              peerAllowedIp: _peerAllowedIp!,
-              peerEndpoint: _peerEndpoint!,
-              peerPublicKey: _peerPublicKey!,
-              privateKey: _privateKey!,
-            ));
-        setState(() {
-          _connected = !_connected;
-        });
-        _stopGettingStats();
-        Navigator.pop(context);
+        if (Platform.isAndroid) {
+          await WireguardPlugin.setState(
+              isConnected: !_connected,
+              tunnel: Tunnel(
+                name: _name!,
+                address: _address!,
+                dnsServer: _dnsServer!,
+                listenPort: _listenPort!,
+                peerAllowedIp: _peerAllowedIp!,
+                peerEndpoint: _peerEndpoint!,
+                peerPublicKey: _peerPublicKey!,
+                privateKey: _privateKey!,
+              ));
+          setState(() {
+            _connected = !_connected;
+          });
+          _stopGettingStats();
+          Navigator.pop(context);
+        } else {
+          Navigator.pop(context);
+          FlutterVpn.disconnect();
+        }
       } else
         alert();
     }
@@ -455,7 +478,8 @@ class _TunnelDetailsState extends State<TunnelDetails> {
 
   _getTunnelNames(BuildContext context) async {
     try {
-      final result = await WireguardPlugin.getTunnelNames();
+      if (Platform.isAndroid)
+        final result = await WireguardPlugin.getTunnelNames();
     } on PlatformException catch (e) {
       l('_getTunnelNames', e.toString());
       _showError(context, e.toString());
@@ -482,19 +506,21 @@ class _TunnelDetailsState extends State<TunnelDetails> {
   }
 
   _startGettingStats(BuildContext context) {
-    _gettingStatsTimer?.cancel();
-    _gettingStatsTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      if (!_gettingStats) {
-        timer.cancel();
-      }
-      try {
-        final result = await WireguardPlugin.getTunnelUsageStats(_name!);
-        setState(() => _stats = result);
-      } catch (e) {
-        // can't get scaffold context from initState. todo: fix this
-        //_showError(context, e.toString());
-      }
-    });
+    if (Platform.isAndroid) {
+      _gettingStatsTimer?.cancel();
+      _gettingStatsTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+        if (!_gettingStats) {
+          timer.cancel();
+        }
+        try {
+          final result = await WireguardPlugin.getTunnelUsageStats(_name!);
+          setState(() => _stats = result);
+        } catch (e) {
+          // can't get scaffold context from initState. todo: fix this
+          //_showError(context, e.toString());
+        }
+      });
+    }
   }
 
   _stopGettingStats() {

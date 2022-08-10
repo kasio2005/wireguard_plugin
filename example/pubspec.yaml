@@ -35,6 +35,7 @@ dependencies:
   flutter_switch: ^0.3.2 
   flutter_archive: ^5.0.0
   flutter_background: ^1.1.0
+  flutter_vpn: ^0.12.0
 
 dev_dependencies:
   flutter_test:

@@ -10,6 +10,8 @@ import 'common/buttons.dart';
 import 'common/texts.dart';
 import 'home_view.dart';
 
+import 'dart:io' show Platform;
+
 class CreateTunnel extends StatefulWidget {
   @override
   createState() => _CreateTunnelState();
@@ -138,7 +140,7 @@ class _CreateTunnelState extends State<CreateTunnel> {
                   padding: AppPadding.allNormal,
                   child: Buttons(
                     buttonColor: Color.fromARGB(178, 19, 65, 67),
-                    text: 'Connect',
+                    text: 'Save Tunnel',
                     onPressed: () => _onActionButtonPressed(context),
                   ),
                 ),
@@ -180,9 +182,8 @@ class _CreateTunnelState extends State<CreateTunnel> {
       _showError(context, 'Enter the peer endpoint');
       return;
     }
-
-    WireguardPlugin.requestPermission();
-    WireguardPlugin.initialize();
+    if (Platform.isAndroid) WireguardPlugin.requestPermission();
+    if (Platform.isAndroid) WireguardPlugin.initialize();
     Get.to(TunnelDetails(
       selected: _nameController.text,
       fromHome: false,

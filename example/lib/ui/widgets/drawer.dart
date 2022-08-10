@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
+import 'package:flutter_vpn/flutter_vpn.dart';
+import 'package:flutter_vpn/state.dart';
 import '../common/texts.dart';
 import '../logs.dart';
 
@@ -163,9 +165,10 @@ class _drawerState extends State<drawer> {
               ),
             ),
             onTap: () {
+              // FlutterVpn.disconnect();
               loadingView();
               export();
-              //Navigator.pop(context);
+              Navigator.pop(context);
             },
           ),
           SizedBox(
@@ -184,7 +187,11 @@ class _drawerState extends State<drawer> {
               ),
             ),
             onTap: () {
-              //  Navigator.pop(context);
+              // FlutterVpn.connectIkev2EAP(
+              //   server: "vpn.nessom.ir",
+              //   username: "behzad",
+              //   password: "1234@qwerB",
+              // );
               Get.to(Logs());
             },
           ),
