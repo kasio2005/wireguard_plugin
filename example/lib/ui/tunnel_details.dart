@@ -18,6 +18,7 @@ import 'home_view.dart';
 import 'model/tunnel.dart';
 import 'model/tunnel_stats.dart';
 import 'ui_constants.dart';
+import 'package:openvpn_flutter/openvpn_flutter.dart';
 
 import 'dart:io' show Platform;
 
@@ -334,6 +335,7 @@ class _TunnelDetailsState extends State<TunnelDetails> {
   }
 
   Future _setTunnelState(BuildContext context) async {
+    print("platform is " + Platform.isIOS.toString());
     setState(() {
       _connected ? text = 'Disconnecting' : 'Connecting';
     });
@@ -390,14 +392,72 @@ class _TunnelDetailsState extends State<TunnelDetails> {
           Navigator.pop(context);
         } else {
           if (_connected) {
-            FlutterVpn.disconnect();
-          } else {
-            Navigator.pop(context);
-            FlutterVpn.connectIkev2EAP(
-              server: "vpn.nessom.ir",
-              username: "behzad",
-              password: "1234@qwerB",
+            late OpenVPN? openVPN = OpenVPN(
+              onVpnStatusChanged: (data) {
+                setState(() {});
+              },
+              onVpnStageChanged: (data, raw) {
+                setState(() {});
+              },
             );
+            openVPN.disconnect();
+          } else {
+            setState(() {
+              _connected = !_connected;
+            });
+
+            VpnStatus? status;
+            VPNStage? stage;
+            bool _granted = false;
+            late OpenVPN? openVPN = OpenVPN(
+              onVpnStatusChanged: (data) {
+                setState(() {
+                  status = data;
+                });
+              },
+              onVpnStageChanged: (data, raw) {
+                setState(() {
+                  stage = data;
+                });
+              },
+            );
+            print("now this will run");
+            // if (_connected) {
+
+            //   FlutterVpn.disconnect();
+            // } else {
+            CheckVpnConnection.isVpnActive().then((value) {
+              print(value);
+            });
+            openVPN.initialize(
+              groupIdentifier: "group.pro.tark.wireguardPluginExample",
+              providerBundleIdentifier:
+                  "pro.tark.wireguardPluginExample.vpnExtension",
+              localizedDescription: "vpnExtension",
+              lastStage: (stage) {
+                setState(() {
+                  stage = stage;
+                });
+              },
+              lastStatus: (status) {
+                setState(() {
+                  status = status;
+                });
+              },
+            );
+            openVPN.connect("USA", 'vpnExtension',
+                username: "behzad",
+                password: "1234@qwerB",
+                certIsRequired: true);
+
+            //Navigator.pop(context);
+            // FlutterVpn.connectIkev2EAP(
+            //   server: "vpn.nessom.ir",
+            //   username: "behzad",
+            //   password: "1234@qwerB",
+            // );
+            // }
+            Navigator.pop(context);
           }
         }
         //Get.to(HomeView());
@@ -432,7 +492,15 @@ class _TunnelDetailsState extends State<TunnelDetails> {
           Navigator.pop(context);
         } else {
           Navigator.pop(context);
-          FlutterVpn.disconnect();
+          late OpenVPN? openVPN = OpenVPN(
+            onVpnStatusChanged: (data) {
+              setState(() {});
+            },
+            onVpnStageChanged: (data, raw) {
+              setState(() {});
+            },
+          );
+          openVPN.disconnect();
         }
       } else
         alert();

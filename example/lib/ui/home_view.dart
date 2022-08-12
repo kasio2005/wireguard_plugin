@@ -7,6 +7,7 @@ import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin_example/ui/tunnel_details.dart';
 import 'package:wireguard_plugin_example/ui/widgets/drawer.dart';
@@ -293,6 +294,101 @@ class _HomeViewState extends State<HomeView> {
                                                                         privatekey
                                                                             .elementAt(index),
                                                                   ));
+                                                        } else {
+                                                          if (_connected) {
+                                                            try {
+                                                              VpnStatus? status;
+                                                              VPNStage? stage;
+                                                              bool _granted =
+                                                                  false;
+                                                              late OpenVPN?
+                                                                  openVPN =
+                                                                  OpenVPN(
+                                                                onVpnStatusChanged:
+                                                                    (data) {
+                                                                  setState(() {
+                                                                    status =
+                                                                        data;
+                                                                  });
+                                                                },
+                                                                onVpnStageChanged:
+                                                                    (data,
+                                                                        raw) {
+                                                                  setState(() {
+                                                                    stage =
+                                                                        data;
+                                                                  });
+                                                                },
+                                                              );
+                                                              print(
+                                                                  "now this will run");
+                                                              // if (_connected) {
+
+                                                              //   FlutterVpn.disconnect();
+                                                              // } else {
+                                                              CheckVpnConnection
+                                                                      .isVpnActive()
+                                                                  .then(
+                                                                      (value) {
+                                                                print(value);
+                                                              });
+                                                              openVPN
+                                                                  .initialize(
+                                                                groupIdentifier:
+                                                                    "group.pro.tark.wireguardPluginExample",
+                                                                providerBundleIdentifier:
+                                                                    "pro.tark.wireguardPluginExample.vpnExtension",
+                                                                localizedDescription:
+                                                                    "vpnExtension",
+                                                                lastStage:
+                                                                    (stage) {
+                                                                  setState(() {
+                                                                    stage =
+                                                                        stage;
+                                                                  });
+                                                                },
+                                                                lastStatus:
+                                                                    (status) {
+                                                                  setState(() {
+                                                                    status =
+                                                                        status;
+                                                                  });
+                                                                },
+                                                              );
+                                                              print(
+                                                                  "before connect");
+                                                              openVPN.connect(
+                                                                  "USA",
+                                                                  'vpnExtension',
+                                                                  username:
+                                                                      "behzad",
+                                                                  password:
+                                                                      "1234@qwerB",
+                                                                  certIsRequired:
+                                                                      true);
+                                                            } catch (e) {
+                                                              Navigator.pop(
+                                                                  context);
+                                                              _showError(
+                                                                  context,
+                                                                  'error');
+                                                            }
+                                                          } else {
+                                                            late OpenVPN?
+                                                                openVPN =
+                                                                OpenVPN(
+                                                              onVpnStatusChanged:
+                                                                  (data) {
+                                                                setState(() {});
+                                                              },
+                                                              onVpnStageChanged:
+                                                                  (data, raw) {
+                                                                setState(() {});
+                                                              },
+                                                            );
+                                                            openVPN
+                                                                .disconnect();
+                                                          }
                                                         }
                                                         Navigator.pop(context);
                                                         // Phoenix.rebirth(context);
