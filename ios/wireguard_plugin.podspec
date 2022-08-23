@@ -1,7 +1,7 @@
 #
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint wireguard_plugin.podspec` to validate before publishing.
-#
+#running it veryy vwell
 Pod::Spec.new do |s|
   s.name             = 'wireguard_plugin'
   s.version          = '0.0.1'
