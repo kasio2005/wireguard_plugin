@@ -9,33 +9,27 @@ import 'dart:io' show Platform;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  startVpnService();
+  Platform.isAndroid ? startVpnService() : null;
   runApp(MyApp());
 }
 
 void startVpnService() async {
   final androidConfig = FlutterBackgroundAndroidConfig(
     notificationTitle: "BNEGuard",
-    notificationText: "Background service to app alive",
+    notificationText: "Background service to BNEGuard",
     notificationImportance: AndroidNotificationImportance.Default,
     notificationIcon: AndroidResource(
         name: 'background_icon',
         defType: 'drawable'), // Default is ic_launcher from folder mipmap
   );
-  bool hasPermissions = await FlutterBackground.hasPermissions;
-  bool? success = hasPermissions
-      ? await FlutterBackground.initialize(androidConfig: androidConfig)
-      : null;
-  if (Platform.isAndroid) {
-    // Android-specific code
-    log("Plateform is android");
-    await WireguardPlugin.requestPermission();
-    await WireguardPlugin.initialize();
-  } else if (Platform.isIOS) {
-    log("Plateform is ios");
+  bool success =
+      await FlutterBackground.initialize(androidConfig: androidConfig);
+  FlutterBackground.enableBackgroundExecution();
 
-    // iOS-specific code
-  }
+  // Android-specific code
+  log("Plateform is android");
+  await WireguardPlugin.requestPermission();
+  await WireguardPlugin.initialize();
 }
 
 class MyApp extends StatelessWidget {

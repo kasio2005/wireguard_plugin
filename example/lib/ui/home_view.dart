@@ -3,12 +3,14 @@ import 'dart:io';
 
 import 'package:check_vpn_connection/check_vpn_connection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_background/flutter_background.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:openvpn_flutter/openvpn_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wireguard_plugin_example/ui/logger/log_printer.dart';
 import 'package:wireguard_plugin_example/ui/tunnel_details.dart';
 import 'package:wireguard_plugin_example/ui/widgets/drawer.dart';
 import 'package:wireguard_plugin_example/ui/wireguard_plugin.dart';
@@ -125,443 +127,438 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        exit(0);
-        throw Null;
-      },
-      child: SafeArea(
-        child: Scaffold(
-          endDrawer: Drawer(
-            child: drawer(),
-          ),
-          key: _scaffoldKey,
-          appBar: AppBar(
-            backgroundColor: Color.fromARGB(178, 19, 65, 67),
-            title: Text('BNEGuard'),
-            actions: <Widget>[
-              InkWell(
-                  onTap: () {
-                    print("pressed");
-                    _scaffoldKey.currentState!.openEndDrawer();
-                  },
-                  child: Icon(Icons.more_vert)),
-              SizedBox(
-                width: 10,
-              )
-            ],
-          ),
-          body: Stack(
-            children: [
-              Center(
-                child: Container(
-                    decoration: BoxDecoration(
-                        color: Color.fromRGBO(22, 138, 77, 0.028)),
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    child: vpn > 0
-                        ? Center(
-                            child: ListView.builder(
-                                itemCount: vpn,
-                                itemBuilder: (BuildContext context, int index) {
-                                  log('list is this time');
-                                  return Card(
-                                    elevation: 3,
-                                    child: SizedBox(
-                                      height: 70,
-                                      width: MediaQuery.of(context).size.width -
-                                          100,
-                                      child: GestureDetector(
-                                        onLongPress: () async {
-                                          delete(index);
-                                        },
-                                        onTap: () async {
-                                          if (Platform.isAndroid) {
-                                            await WireguardPlugin
-                                                .requestPermission();
-                                            await WireguardPlugin.initialize();
-                                            Get.to(TunnelDetails(
-                                              fromHome: true,
-                                              selected: _selectedTunelName,
-                                              initName: name.elementAt(index),
-                                              initAddress:
-                                                  address.elementAt(index),
-                                              initPort: '51820',
-                                              initDnsServer:
-                                                  dns.elementAt(index),
-                                              initPrivateKey:
-                                                  privatekey.elementAt(index),
-                                              initAllowedIp:
-                                                  allowed.elementAt(index),
-                                              initPublicKey:
-                                                  publickey.elementAt(index),
-                                              initEndpoint:
-                                                  endpoint.elementAt(index),
-                                            ));
-                                          }
-                                        },
-                                        child: Ink(
-                                          color:
-                                              Color.fromARGB(178, 19, 65, 67),
-                                          child: ListTile(
-                                              selectedColor: Colors.lightGreen,
-                                              title:
-                                                  Text(name.elementAt(index)),
-                                              subtitle: Text(
-                                                  address.elementAt(index)),
-                                              trailing: SizedBox(
-                                                width: 40,
-                                                height: 30,
-                                                child: FlutterSwitch(
-                                                    activeColor: Color.fromARGB(
-                                                        186, 176, 203, 207),
-                                                    inactiveColor: Colors.white,
-                                                    toggleColor: Colors.grey,
-                                                    width: 40,
-                                                    height: 30,
-                                                    padding: 4.0,
-                                                    toggleSize: 15.0,
-                                                    borderRadius: 10.0,
-                                                    onToggle: (val) async {
-                                                      if (!(_connected &&
-                                                          _selectedTunelName !=
-                                                              name.elementAt(
-                                                                  index))) {
+    return SafeArea(
+      child: Scaffold(
+        endDrawer: Drawer(
+          child: drawer(),
+        ),
+        key: _scaffoldKey,
+        appBar: AppBar(
+          backgroundColor: Color.fromARGB(178, 19, 65, 67),
+          title: Text('BNEGuard'),
+          actions: <Widget>[
+            InkWell(
+                onTap: () {
+                  print("pressed");
+                  _scaffoldKey.currentState!.openEndDrawer();
+                },
+                child: Icon(Icons.more_vert)),
+            SizedBox(
+              width: 10,
+            )
+          ],
+        ),
+        body: Stack(
+          children: [
+            Center(
+              child: Container(
+                  decoration:
+                      BoxDecoration(color: Color.fromRGBO(22, 138, 77, 0.028)),
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                  child: vpn > 0
+                      ? Center(
+                          child: ListView.builder(
+                              itemCount: vpn,
+                              itemBuilder: (BuildContext context, int index) {
+                                log('list is this time');
+                                return Card(
+                                  elevation: 3,
+                                  child: SizedBox(
+                                    height: 70,
+                                    width:
+                                        MediaQuery.of(context).size.width - 100,
+                                    child: GestureDetector(
+                                      onLongPress: () async {
+                                        delete(index);
+                                      },
+                                      onTap: () async {
+                                        if (Platform.isAndroid) {
+                                          await WireguardPlugin
+                                              .requestPermission();
+                                          await WireguardPlugin.initialize();
+                                          Get.to(TunnelDetails(
+                                            fromHome: true,
+                                            selected: _selectedTunelName,
+                                            initName: name.elementAt(index),
+                                            initAddress:
+                                                address.elementAt(index),
+                                            initPort: '51820',
+                                            initDnsServer: dns.elementAt(index),
+                                            initPrivateKey:
+                                                privatekey.elementAt(index),
+                                            initAllowedIp:
+                                                allowed.elementAt(index),
+                                            initPublicKey:
+                                                publickey.elementAt(index),
+                                            initEndpoint:
+                                                endpoint.elementAt(index),
+                                          ));
+                                        }
+                                      },
+                                      child: Ink(
+                                        color: Color.fromARGB(178, 19, 65, 67),
+                                        child: ListTile(
+                                            selectedColor: Colors.lightGreen,
+                                            title: Text(name.elementAt(index)),
+                                            subtitle:
+                                                Text(address.elementAt(index)),
+                                            trailing: SizedBox(
+                                              width: 40,
+                                              height: 30,
+                                              child: FlutterSwitch(
+                                                  activeColor: Color.fromARGB(
+                                                      186, 176, 203, 207),
+                                                  inactiveColor: Colors.white,
+                                                  toggleColor: Colors.grey,
+                                                  width: 40,
+                                                  height: 30,
+                                                  padding: 4.0,
+                                                  toggleSize: 15.0,
+                                                  borderRadius: 10.0,
+                                                  onToggle: (val) async {
+                                                    if (!(_connected &&
+                                                        _selectedTunelName !=
+                                                            name.elementAt(
+                                                                index))) {
+                                                      setState(() {
+                                                        _connected =
+                                                            !_connected;
+                                                      });
+                                                      log("before");
+                                                      log(_selectedTunelName);
+                                                      log(text);
+                                                      log(_connected
+                                                          .toString());
+                                                      SharedPreferences
+                                                          sharedPreferences =
+                                                          await SharedPreferences
+                                                              .getInstance();
+                                                      if (!_connected) {
+                                                        await FlutterBackground
+                                                            .disableBackgroundExecution();
                                                         setState(() {
-                                                          _connected =
-                                                              !_connected;
+                                                          sharedPreferences
+                                                              .setString(
+                                                                  'selectedTunelName',
+                                                                  'no');
+                                                          _selectedTunelName =
+                                                              'no';
                                                         });
-                                                        log("before");
-                                                        log(_selectedTunelName);
-                                                        log(text);
-                                                        log(_connected
-                                                            .toString());
-                                                        SharedPreferences
-                                                            sharedPreferences =
-                                                            await SharedPreferences
-                                                                .getInstance();
-                                                        if (!_connected) {
-                                                          setState(() {
-                                                            sharedPreferences
-                                                                .setString(
-                                                                    'selectedTunelName',
-                                                                    'no');
-                                                            _selectedTunelName =
-                                                                'no';
+                                                      } else {
+                                                        bool success =
+                                                            await FlutterBackground
+                                                                .enableBackgroundExecution();
+                                                        Logger().log_print(
+                                                            "is backgroung service enabled");
+                                                        Logger()
+                                                            .log_print(success);
+                                                        setState(() {
+                                                          _selectedTunelName =
+                                                              name.elementAt(
+                                                                  index);
+                                                          sharedPreferences
+                                                              .setString(
+                                                                  'selectedTunelName',
+                                                                  name.elementAt(
+                                                                      index));
+                                                        });
+                                                      }
+                                                      loadingView();
+                                                      if (Platform.isAndroid) {
+                                                        await WireguardPlugin
+                                                            .setState(
+                                                                isConnected:
+                                                                    _connected,
+                                                                tunnel: Tunnel(
+                                                                  name: name
+                                                                      .elementAt(
+                                                                          index),
+                                                                  address: address
+                                                                      .elementAt(
+                                                                          index),
+                                                                  dnsServer: dns
+                                                                      .elementAt(
+                                                                          index),
+                                                                  listenPort:
+                                                                      '51820',
+                                                                  peerAllowedIp:
+                                                                      allowed.elementAt(
+                                                                          index),
+                                                                  peerEndpoint:
+                                                                      endpoint.elementAt(
+                                                                          index),
+                                                                  peerPublicKey:
+                                                                      publickey
+                                                                          .elementAt(
+                                                                              index),
+                                                                  privateKey: privatekey
+                                                                      .elementAt(
+                                                                          index),
+                                                                ));
+                                                      } else {
+                                                        if (_connected) {
+                                                          loadingView();
+                                                          Future.delayed(
+                                                                  Duration(
+                                                                      seconds:
+                                                                          3))
+                                                              .then((value) {
+                                                            Logger().log_print(
+                                                                "after 3 secomdsssssssssssssss");
+                                                            Navigator.pop(
+                                                                context);
                                                           });
-                                                        } else {
-                                                          setState(() {
-                                                            _selectedTunelName =
-                                                                name.elementAt(
-                                                                    index);
-                                                            sharedPreferences
-                                                                .setString(
-                                                                    'selectedTunelName',
-                                                                    name.elementAt(
-                                                                        index));
-                                                          });
-                                                        }
-                                                        loadingView();
-                                                        if (Platform
-                                                            .isAndroid) {
-                                                          await WireguardPlugin
-                                                              .setState(
-                                                                  isConnected:
-                                                                      _connected,
-                                                                  tunnel:
-                                                                      Tunnel(
-                                                                    name: name
-                                                                        .elementAt(
-                                                                            index),
-                                                                    address: address
-                                                                        .elementAt(
-                                                                            index),
-                                                                    dnsServer: dns
-                                                                        .elementAt(
-                                                                            index),
-                                                                    listenPort:
-                                                                        '51820',
-                                                                    peerAllowedIp:
-                                                                        allowed.elementAt(
-                                                                            index),
-                                                                    peerEndpoint:
-                                                                        endpoint
-                                                                            .elementAt(index),
-                                                                    peerPublicKey:
-                                                                        publickey
-                                                                            .elementAt(index),
-                                                                    privateKey:
-                                                                        privatekey
-                                                                            .elementAt(index),
-                                                                  ));
-                                                        } else {
-                                                          if (_connected) {
-                                                            try {
-                                                              VpnStatus? status;
-                                                              VPNStage? stage;
-                                                              bool _granted =
-                                                                  false;
-                                                              late OpenVPN?
-                                                                  openVPN =
-                                                                  OpenVPN(
-                                                                onVpnStatusChanged:
-                                                                    (data) {
-                                                                  setState(() {
-                                                                    status =
-                                                                        data;
-                                                                  });
-                                                                },
-                                                                onVpnStageChanged:
-                                                                    (data,
-                                                                        raw) {
-                                                                  setState(() {
-                                                                    stage =
-                                                                        data;
-                                                                  });
-                                                                },
-                                                              );
-                                                              print(
-                                                                  "now this will run");
-                                                              // if (_connected) {
-
-                                                              //   FlutterVpn.disconnect();
-                                                              // } else {
-                                                              CheckVpnConnection
-                                                                      .isVpnActive()
-                                                                  .then(
-                                                                      (value) {
-                                                                print(value);
-                                                              });
-                                                              openVPN
-                                                                  .initialize(
-                                                                groupIdentifier:
-                                                                    "group.pro.tark.wireguardPluginExample",
-                                                                providerBundleIdentifier:
-                                                                    "pro.tark.wireguardPluginExample.vpnExtension",
-                                                                localizedDescription:
-                                                                    "vpnExtension",
-                                                                lastStage:
-                                                                    (stage) {
-                                                                  setState(() {
-                                                                    stage =
-                                                                        stage;
-                                                                  });
-                                                                },
-                                                                lastStatus:
-                                                                    (status) {
-                                                                  setState(() {
-                                                                    status =
-                                                                        status;
-                                                                  });
-                                                                },
-                                                              );
-                                                              print(
-                                                                  "before connect");
-                                                              openVPN.connect(
-                                                                  "USA",
-                                                                  'vpnExtension',
-                                                                  username:
-                                                                      "behzad",
-                                                                  password:
-                                                                      "1234@qwerB",
-                                                                  certIsRequired:
-                                                                      true);
-                                                            } catch (e) {
-                                                              Navigator.pop(
-                                                                  context);
-                                                              _showError(
-                                                                  context,
-                                                                  'error');
-                                                            }
-                                                          } else {
+                                                          try {
+                                                            VpnStatus? status;
+                                                            VPNStage? stage;
+                                                            bool _granted =
+                                                                false;
                                                             late OpenVPN?
                                                                 openVPN =
                                                                 OpenVPN(
                                                               onVpnStatusChanged:
                                                                   (data) {
-                                                                setState(() {});
+                                                                setState(() {
+                                                                  status = data;
+                                                                });
                                                               },
                                                               onVpnStageChanged:
                                                                   (data, raw) {
-                                                                setState(() {});
+                                                                setState(() {
+                                                                  stage = data;
+                                                                });
                                                               },
                                                             );
-                                                            openVPN
-                                                                .disconnect();
+                                                            print(
+                                                                "now this will run");
+                                                            // if (_connected) {
+
+                                                            //   FlutterVpn.disconnect();
+                                                            // } else {
+                                                            CheckVpnConnection
+                                                                    .isVpnActive()
+                                                                .then((value) {
+                                                              print(value);
+                                                            });
+                                                            openVPN.initialize(
+                                                              groupIdentifier:
+                                                                  "group.pro.tark.wireguardPluginExample",
+                                                              providerBundleIdentifier:
+                                                                  "pro.tark.wireguardPluginExample.vpnExtension",
+                                                              localizedDescription:
+                                                                  "vpnExtension",
+                                                              lastStage:
+                                                                  (stage) {
+                                                                setState(() {
+                                                                  stage = stage;
+                                                                });
+                                                              },
+                                                              lastStatus:
+                                                                  (status) {
+                                                                setState(() {
+                                                                  status =
+                                                                      status;
+                                                                });
+                                                              },
+                                                            );
+                                                            print(
+                                                                "before connect");
+                                                            openVPN.connect("USA",
+                                                                'vpnExtension',
+                                                                username:
+                                                                    "behzad",
+                                                                password:
+                                                                    "1234@qwerB",
+                                                                certIsRequired:
+                                                                    true);
+                                                          } catch (e) {
+                                                            _showError(context,
+                                                                'error');
                                                           }
+                                                        } else {
+                                                          late OpenVPN?
+                                                              openVPN = OpenVPN(
+                                                            onVpnStatusChanged:
+                                                                (data) {
+                                                              setState(() {});
+                                                            },
+                                                            onVpnStageChanged:
+                                                                (data, raw) {
+                                                              setState(() {});
+                                                            },
+                                                          );
+                                                          openVPN.disconnect();
                                                         }
-                                                        Navigator.pop(context);
-                                                        // Phoenix.rebirth(context);
-                                                        log("after");
-                                                        log(_selectedTunelName);
-                                                      } else {
-                                                        alert();
                                                       }
-                                                    },
-                                                    value: _connected
-                                                        ? _selectedTunelName ==
-                                                                name.elementAt(
-                                                                    index)
-                                                            ? true
-                                                            : false
-                                                        : false),
-                                              )),
-                                        ),
+                                                      Navigator.pop(context);
+                                                      // Phoenix.rebirth(context);
+                                                      log("after");
+                                                      log(_selectedTunelName);
+                                                    } else {
+                                                      alert();
+                                                    }
+                                                  },
+                                                  value: _connected
+                                                      ? _selectedTunelName ==
+                                                              name.elementAt(
+                                                                  index)
+                                                          ? true
+                                                          : false
+                                                      : false),
+                                            )),
                                       ),
                                     ),
-                                  );
-                                }),
-                          )
-                        : Center(
-                            child: Stack(
-                              children: [
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Opacity(
-                                      opacity: 0.3,
-                                      child: Container(
-                                        child: Image.asset(
-                                          'assets/icon/homepage.png',
-                                          height: 300,
-                                          width: 500,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                            "Add tunnel using below button")),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          )),
-              ),
-              Positioned(
-                top: MediaQuery.of(context).size.height - 200,
-                left: MediaQuery.of(context).size.width - 80,
-                child: InkWell(
-                  onTap: () {
-                    showModalBottomSheet(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        backgroundColor: Colors.white,
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Container(
-                            decoration: BoxDecoration(
-                                color: Color.fromARGB(149, 6, 52, 41)),
-                            height: 200,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 28.0),
-                              child: Column(
+                                  ),
+                                );
+                              }),
+                        )
+                      : Center(
+                          child: Stack(
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        filePicker();
-                                      },
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.file_copy,
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(
-                                            width: 15,
-                                          ),
-                                          Text(
-                                            "IMPORT FROM FILE OR ARCHIVE",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          )
-                                        ],
+                                  Opacity(
+                                    opacity: 0.3,
+                                    child: Container(
+                                      child: Image.asset(
+                                        'assets/icon/homepage.png',
+                                        height: 300,
+                                        width: 500,
                                       ),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        log("Scanning Qr code..");
-                                        scanQRCode();
-                                      },
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.qr_code,
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(
-                                            width: 15,
-                                          ),
-                                          Text(
-                                            "SCAN FROM QR CODE",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        createFromScratch();
-                                      },
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.edit,
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(
-                                            width: 15,
-                                          ),
-                                          Text(
-                                            "CREATE FROM SCRATCH",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  )
+                                  Container(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                          "Add tunnel using below button")),
                                 ],
                               ),
-                            ),
-                          );
-                        });
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: Color.fromARGB(178, 19, 65, 67),
-                    radius: 30,
-                    child: Ink(
-                      child: Icon(
-                        Icons.add,
-                        size: 40,
+                            ],
+                          ),
+                        )),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).size.height - 200,
+              left: MediaQuery.of(context).size.width - 80,
+              child: InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
+                      backgroundColor: Colors.white,
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Container(
+                          decoration: BoxDecoration(
+                              color: Color.fromARGB(149, 6, 52, 41)),
+                          height: 200,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 28.0),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      filePicker();
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.file_copy,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(
+                                          width: 15,
+                                        ),
+                                        Text(
+                                          "IMPORT FROM FILE OR ARCHIVE",
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      log("Scanning Qr code..");
+                                      scanQRCode();
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.qr_code,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(
+                                          width: 15,
+                                        ),
+                                        Text(
+                                          "SCAN FROM QR CODE",
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: InkWell(
+                                    onTap: () {
+                                      createFromScratch();
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(
+                                          width: 15,
+                                        ),
+                                        Text(
+                                          "CREATE FROM SCRATCH",
+                                          style: TextStyle(color: Colors.white),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      });
+                },
+                child: CircleAvatar(
+                  backgroundColor: Color.fromARGB(178, 19, 65, 67),
+                  radius: 30,
+                  child: Ink(
+                    child: Icon(
+                      Icons.add,
+                      size: 40,
                     ),
                   ),
                 ),
               ),
-              // Container(
-              //   height: 100,
-              //   width: MediaQuery.of(context).size.width,
-              //   child: Row(
-              //     children: [
-              //       Text("BNE Guard"),
-              //       Spacer(),
-              //       Icon(Icons.more_horiz)
-              //     ],
-              //   ),
-              // )
-              // Positioned(
-              //     top: MediaQuery.of(context).size.height / 2,
-              //     child: Container(child: Text("Add tunnel using below button"))),
-            ],
-          ),
+            ),
+            // Container(
+            //   height: 100,
+            //   width: MediaQuery.of(context).size.width,
+            //   child: Row(
+            //     children: [
+            //       Text("BNE Guard"),
+            //       Spacer(),
+            //       Icon(Icons.more_horiz)
+            //     ],
+            //   ),
+            // )
+            // Positioned(
+            //     top: MediaQuery.of(context).size.height / 2,
+            //     child: Container(child: Text("Add tunnel using below button"))),
+          ],
         ),
       ),
     );
@@ -667,7 +664,7 @@ class _HomeViewState extends State<HomeView> {
               }
 
               Navigator.pop(context);
-              Get.to(HomeView());
+              Get.offAll(HomeView());
             },
             child: Text("Delete")),
         FlatButton(
@@ -809,8 +806,7 @@ class _HomeViewState extends State<HomeView> {
     log("initializing");
     if (Platform.isAndroid) await WireguardPlugin.initialize();
     log("going to tunnel details");
-    Get.to(TunnelDetails(
-      fromHome: false,
+    Get.to(CreateTunnel(
       selected: 'no',
       initName: name,
       initAddress: initAddress,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/services.dart';
 
@@ -63,7 +64,7 @@ class WireguardPlugin {
         tunnel: tunnel,
       ).toJson()),
     );
-    print('WireguardPlugin setState $result');
+    log('WireguardPlugin setState $result');
     return result;
   }
 

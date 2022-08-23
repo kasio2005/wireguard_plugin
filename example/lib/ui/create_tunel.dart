@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wireguard_plugin_example/ui/tunnel_details.dart';
 import 'package:wireguard_plugin_example/ui/ui_constants.dart';
 import 'package:wireguard_plugin_example/ui/wireguard_plugin.dart';
@@ -13,20 +16,58 @@ import 'home_view.dart';
 import 'dart:io' show Platform;
 
 class CreateTunnel extends StatefulWidget {
+  String? initName;
+  String? initAddress;
+  String? initPort;
+  String? initDnsServer;
+  String? initPrivateKey;
+  String? initAllowedIp;
+  String? initPublicKey;
+  String? initEndpoint;
+  String? selected;
+
+  CreateTunnel(
+      {this.initAddress,
+      this.selected,
+      this.initAllowedIp,
+      this.initDnsServer,
+      this.initEndpoint,
+      this.initName,
+      this.initPort,
+      this.initPrivateKey,
+      this.initPublicKey});
   @override
   createState() => _CreateTunnelState();
 }
 
 class _CreateTunnelState extends State<CreateTunnel> {
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _listenPortController = TextEditingController();
-  final _dnsServerController = TextEditingController();
-  final _privateKeyController = TextEditingController();
-  final _peerAllowedIpController = TextEditingController();
-  final _peerPublicKeyController = TextEditingController();
-  final _peerEndpointController = TextEditingController();
+  late final _nameController = TextEditingController(
+    text: widget.initName,
+  );
+  late final _addressController = TextEditingController(
+    text: widget.initAddress,
+  );
+  late final _listenPortController = TextEditingController(
+    text: widget.initPort,
+  );
+  late final _dnsServerController = TextEditingController(
+    text: widget.initDnsServer,
+  );
+  late final _privateKeyController = TextEditingController(
+    text: widget.initPrivateKey,
+  );
+  late final _peerAllowedIpController = TextEditingController(
+    text: widget.initAllowedIp,
+  );
+  late final _peerPublicKeyController = TextEditingController(
+    text: widget.initPublicKey,
+  );
+  late final _peerEndpointController = TextEditingController(
+    text: widget.initEndpoint,
+  );
   bool _scrolledToTop = true;
+  int vpn = 1;
+  bool isExist = false;
 
   @override
   void initState() {
@@ -42,7 +83,7 @@ class _CreateTunnelState extends State<CreateTunnel> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        Get.to(HomeView());
+        Get.offAll(HomeView());
         throw Null;
       },
       child: Scaffold(
@@ -50,7 +91,7 @@ class _CreateTunnelState extends State<CreateTunnel> {
         appBar: AppBar(
           leading: InkWell(
             onTap: () {
-              Get.to(HomeView());
+              Get.offAll(HomeView());
             },
             child: Icon(
               Icons.arrow_back,
@@ -182,20 +223,89 @@ class _CreateTunnelState extends State<CreateTunnel> {
       _showError(context, 'Enter the peer endpoint');
       return;
     }
-    if (Platform.isAndroid) WireguardPlugin.requestPermission();
-    if (Platform.isAndroid) WireguardPlugin.initialize();
-    Get.to(TunnelDetails(
-      selected: _nameController.text,
-      fromHome: false,
-      initName: _nameController.text,
-      initAddress: _addressController.text,
-      initPort: "51820",
-      initDnsServer: _dnsServerController.text,
-      initPrivateKey: _privateKeyController.text,
-      initAllowedIp: _peerAllowedIpController.text,
-      initPublicKey: _peerPublicKeyController.text,
-      initEndpoint: _peerEndpointController.text,
-    ));
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    if (preferences.containsKey('vpn')) {
+      log('have vpn');
+      setState(() {
+        vpn = preferences.getInt('vpn')!;
+      });
+      log(vpn.toString());
+    }
+    for (int i = 1; i <= vpn; i++) {
+      if (preferences.getString('${i}name') == _nameController.text) {
+        setState(() {
+          isExist = true;
+        });
+      }
+    }
+    log(isExist.toString());
+    if (!isExist) {
+      log("tunel not exist");
+      log(vpn.toString());
+      if (preferences.containsKey('vpn')) {
+        setState(() {
+          vpn = preferences.getInt('vpn')! + 1;
+        });
+      }
+      preferences.setInt('vpn', vpn);
+
+      log(vpn.toString());
+      preferences.setString('${vpn}name', _nameController.text);
+
+      preferences.setString('${vpn}address', _addressController.text);
+      preferences.setString('${vpn}dnsServer', _dnsServerController.text);
+      preferences.setString('${vpn}listenPort', _listenPortController.text);
+      preferences.setString(
+          '${vpn}peerAllowedIp', _peerAllowedIpController.text);
+      preferences.setString('${vpn}peerEndpoint', _peerEndpointController.text);
+      preferences.setString('${vpn}privateKey', _privateKeyController.text);
+      preferences.setString(
+          '${vpn}peerPublicKey', _peerPublicKeyController.text);
+
+      Get.offAll(HomeView());
+    } else {
+      setState(() {
+        isExist = false;
+      });
+      alert();
+    }
+  }
+
+  alert() {
+    AlertDialog alert = AlertDialog(
+      actions: [
+        FlatButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              "Ok",
+              style: TextStyle(fontFamily: 'Montserrat'),
+            ))
+      ],
+      content: new Row(
+        children: [
+          //  CircularProgressIndicator(),
+          Container(
+              //margin: EdgeInsets.only(left: 7),
+              child: Builder(builder: (context) {
+            return FittedBox(
+                child: Text(
+              "Tunnel already exists.",
+              maxLines: 2,
+              style: TextStyle(fontFamily: 'Montserrat'),
+            ));
+          })),
+        ],
+      ),
+    );
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
   _showError(BuildContext context, String error) {

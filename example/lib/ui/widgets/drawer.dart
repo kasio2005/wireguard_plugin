@@ -140,7 +140,7 @@ class _drawerState extends State<drawer> {
             title: Padding(
               padding: const EdgeInsets.only(left: 40.0),
               child: Text(
-                "BNEGuard for Android                                       ",
+                "BNEGuard                                                      ",
                 style: TextStyle(color: Colors.black),
               ),
             ),
